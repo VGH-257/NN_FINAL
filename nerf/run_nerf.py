@@ -18,6 +18,8 @@ from load_deepvoxels import load_dv_data
 from load_blender import load_blender_data
 from load_LINEMOD import load_LINEMOD_data
 
+from torch.utils.tensorboard import SummaryWriter
+
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 np.random.seed(0)
@@ -536,6 +538,8 @@ def train():
     parser = config_parser()
     args = parser.parse_args()
 
+    writer = SummaryWriter(log_dir=os.path.join(args.basedir, args.expname, 'logs'))
+
     # Load data
     K = None
     if args.dataset_type == 'llff':
@@ -820,13 +824,34 @@ def train():
             os.makedirs(testsavedir, exist_ok=True)
             print('test poses shape', poses[i_test].shape)
             with torch.no_grad():
-                render_path(torch.Tensor(poses[i_test]).to(device), hwf, K, args.chunk, render_kwargs_test, gt_imgs=images[i_test], savedir=testsavedir)
+                rgbs, _ =render_path(torch.Tensor(poses[i_test]).to(device), hwf, K, args.chunk, render_kwargs_test, gt_imgs=images[i_test], savedir=testsavedir)
             print('Saved test set')
 
+            print("Evaluating test loss...")
+            test_images = images[i_test]
+            test_loss_total = 0.
+            test_psnr_total = 0.       
+            for j in range(len(test_images)):
+                gt_img = test_images[j].cpu().numpy()  # shape: [H, W, 3]
+                pred_img = rgbs[j]  # from rendered output
+                mse = np.mean((gt_img - pred_img) ** 2)
+                psnr_val = -10. * np.log10(mse)
+
+                test_loss_total += mse
+                test_psnr_total += psnr_val
+
+            test_loss_avg = test_loss_total / len(test_images)
+            test_psnr_avg = test_psnr_total / len(test_images)  
+            writer.add_scalar('test/loss', test_loss_avg, i)
+            writer.add_scalar('test/psnr', test_psnr_avg, i)   
 
     
         if i%args.i_print==0:
             tqdm.write(f"[TRAIN] Iter: {i} Loss: {loss.item()}  PSNR: {psnr.item()}")
+            writer.add_scalar('train/loss', loss.item(), i)
+            writer.add_scalar('train/psnr', psnr.item(), i)            
+            
+            
         """
             print(expname, i, psnr.numpy(), loss.numpy(), global_step.numpy())
             print('iter time {:.05f}'.format(dt))
