@@ -3,9 +3,13 @@
 ## 训练前的数据准备
 
 ### 环境准备
-1. 安装colmap
-2. 安装LLFF
-3. 配置[nerf-pytorch]
+```bash
+conda create -n nerf python=3.10
+conda activate nerf
+```
+- 安装[colmap](https://github.com/colmap/colmap)
+- 安装[LLFF](https://github.com/Fyusion/LLFF)
+- 配置[nerf-pytorch](https://github.com/yenchenlin/nerf-pytorch)
 
 ### 数据集
 将视频转换后的图片放到 `./data/chair/images/`路径下
