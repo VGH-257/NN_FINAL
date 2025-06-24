@@ -4,5 +4,5 @@
 
 项目主要包含三个子目录，对应的训练测试指南请参考子目录中的README。
 - [NeRF](https://github.com/VGH-257/NN_FINAL/tree/main/nerf)
-- [TensorRF]()
-- [3DGaussian]()
+- [TensorRF](https://github.com/VGH-257/NN_FINAL/tree/main/tensorf)
+- [3DGaussian](https://github.com/VGH-257/NN_FINAL/tree/main/3dgaussian)
